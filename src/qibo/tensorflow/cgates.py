@@ -8,7 +8,7 @@ from qibo.tensorflow import custom_operators as op
 from typing import List, Optional, Sequence, Tuple
 
 
-class TensorflowGate:
+class TensorflowGate(base_gates.Gate):
 
     import sys
     module = sys.modules[__name__]
@@ -79,15 +79,6 @@ class TensorflowGate:
         state = self.gate_op(state, self.qubits_tensor, 2 * self.nqubits,
                              *self.target_qubits_dm)
         return state
-
-    def __call__(self, state: tf.Tensor) -> tf.Tensor:
-        """Implements the `Gate` on a given state.
-
-        Args:
-            state (tf.Tensor): State vector with shape (2 ** nqubits,).
-        """
-        self._set_nqubits(state)
-        return getattr(self, self._active_call)(state)
 
 
 class MatrixGate(TensorflowGate):

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 # @authors: S. Carrazza and A. Garcia
+from abc import ABC, abstractmethod
 from qibo import config
 from qibo.config import raise_error
-from typing import Dict, List, Iterable, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 QASM_GATES = {"h": "H", "x": "X", "y": "Y", "z": "Z",
               "rx": "RX", "ry": "RY", "rz": "RZ",
@@ -15,7 +16,7 @@ PARAMETRIZED_GATES = {"rx", "ry", "rz", "u1", "u2", "u3",
                       "crx", "cry", "crz", "cu1", "cu3"}
 
 
-class Gate(object):
+class Gate(ABC):
     """The base class for gate implementation.
 
     All gates should inherit this class.
@@ -197,28 +198,6 @@ class Gate(object):
             self._unitary = self.control_unitary(self._unitary)
         return self._unitary
 
-    def construct_unitary(self): # pragma: no cover
-        """Constructs the gate's unitary matrix.
-
-        Args:
-            *args: Variational parameters for parametrized gates.
-
-        Returns:
-            Unitary matrix as an array or tensor supported by the backend.
-        """
-        # abstract method
-        return raise_error(NotImplementedError)
-
-    @staticmethod
-    def control_unitary(unitary): # pragma: no cover
-        """Controls unitary matrix on one qubit.
-
-        Helper method for ``construct_unitary`` for gates where ``controlled_by``
-        has been used.
-        """
-        # abstract method
-        raise_error(NotImplementedError)
-
     def __matmul__(self, other: "Gate") -> "Gate":
         """Gate multiplication."""
         if self.qubits != other.qubits:
@@ -234,41 +213,6 @@ class Gate(object):
     def __rmatmul__(self, other: "TensorflowGate") -> "TensorflowGate": # pragma: no cover
         # abstract method
         return self.__matmul__(other)
-
-    def _calculate_qubits_tensor(self):
-        """Calculates qubits tensor required for applying gates using custom operators."""
-        pass
-
-    def _calculate_einsum_cache(self):
-        """Calculates einsum cache required for applying gates using Tensorflow ops."""
-        pass
-
-    def _prepare(self): # pragma: no cover
-        """Prepares the gate for application to state vectors.
-
-        Called automatically by the ``nqubits`` setter.
-        Calculates the ``matrix`` required to apply the gate to state vectors.
-        This is not necessarily the same as the unitary matrix of the gate.
-        """
-        # abstract method
-        pass
-
-    def commutes(self, gate: "Gate") -> bool:
-        """Checks if two gates commute.
-
-        Args:
-            gate: Gate to check if it commutes with the current gate.
-
-        Returns:
-            ``True`` if the gates commute, otherwise ``False``.
-        """
-        if self.is_special_gate or gate.is_special_gate:
-            return False
-        t1 = set(self.target_qubits)
-        t2 = set(gate.target_qubits)
-        a = self.__class__ == gate.__class__ and t1 == t2
-        b = not (t1 & set(gate.qubits) or t2 & set(self.qubits))
-        return a or b
 
     def on_qubits(self, *q) -> "Gate":
         """Creates the same gate targeting different qubits.
@@ -317,7 +261,7 @@ class Gate(object):
             self.control_qubits = qubits
         return self
 
-    def decompose(self, *free) -> List["Gate"]:
+    def decompose(self) -> List["Gate"]:
         """Decomposes multi-control gates to gates supported by OpenQASM.
 
         Decompositions are based on `arXiv:9503016 <https://arxiv.org/abs/quant-ph/9503016>`_.
@@ -333,14 +277,78 @@ class Gate(object):
         # original gate
         return [self.__class__(*self.init_args, **self.init_kwargs)]
 
-    def _state_vector_call(self, state): # pragma: no cover
-        """Acts with the gate on a given state vector."""
-        # abstract method
+    def commutes(self, gate: "Gate") -> bool:
+        """Checks if two gates commute.
+
+        Args:
+            gate: Gate to check if it commutes with the current gate.
+
+        Returns:
+            ``True`` if the gates commute, otherwise ``False``.
+        """
+        if self.is_special_gate or gate.is_special_gate:
+            return False
+        t1 = set(self.target_qubits)
+        t2 = set(gate.target_qubits)
+        a = self.__class__ == gate.__class__ and t1 == t2
+        b = not (t1 & set(gate.qubits) or t2 & set(self.qubits))
+        return a or b
+
+    @abstractmethod
+    def construct_unitary(self): # pragma: no cover
+        """Constructs the gate's unitary matrix.
+
+        Args:
+            *args: Variational parameters for parametrized gates.
+
+        Returns:
+            Unitary matrix as an array or tensor supported by the backend.
+        """
+        return raise_error(NotImplementedError)
+
+    @staticmethod
+    @abstractmethod
+    def control_unitary(unitary): # pragma: no cover
+        """Controls unitary matrix on one qubit.
+
+        Helper method for ``construct_unitary`` for gates where ``controlled_by``
+        has been used.
+        """
         raise_error(NotImplementedError)
 
+    @abstractmethod
+    def _calculate_qubits_tensor(self):
+        """Calculates qubits tensor required for applying gates using custom operators."""
+        raise_error(NotImplementedError)
+
+    @abstractmethod
+    def _calculate_einsum_cache(self):
+        """Calculates einsum cache required for applying gates using Tensorflow ops."""
+        raise_error(NotImplementedError)
+
+    @abstractmethod
+    def _prepare(self): # pragma: no cover
+        """Prepares the gate for application to state vectors.
+
+        Called automatically by the ``nqubits`` setter.
+        Calculates the ``matrix`` required to apply the gate to state vectors.
+        This is not necessarily the same as the unitary matrix of the gate.
+        """
+        raise_error(NotImplementedError)
+
+    @abstractmethod
+    def _state_vector_call(self, state): # pragma: no cover
+        """Acts with the gate on a given state vector."""
+        raise_error(NotImplementedError)
+
+    @abstractmethod
     def _density_matrix_call(self, state): # pragma: no cover
         """Acts with the gate on a given density matrix."""
-        # abstract method
+        raise_error(NotImplementedError)
+
+    @abstractmethod
+    def _set_nqubits(self, state): # pragma: no cover
+        """Sets the total number of qubits of the state that the gate acts on."""
         raise_error(NotImplementedError)
 
     def __call__(self, state): # pragma: no cover
@@ -353,8 +361,8 @@ class Gate(object):
         Returns:
             The state vector after the action of the gate.
         """
-        # abstract method
-        raise_error(NotImplementedError)
+        self._set_nqubits(state)
+        return getattr(self, self._active_call)(state)
 
 
 class H(Gate):
@@ -394,7 +402,7 @@ class X(Gate):
             gate = super(X, self).controlled_by(*q)
         return gate
 
-    def decompose(self, *free: int, use_toffolis: bool = True) -> List[Gate]:
+    def decompose(self, *free: int, use_toffolis: bool = True) -> List[Gate]: # pylint: disable=W0221
         """Decomposes multi-control ``X`` gate to one-qubit, ``CNOT`` and ``TOFFOLI`` gates.
 
         Args:
@@ -424,16 +432,16 @@ class X(Gate):
 
         decomp_gates = []
         n = m + 1 + len(free)
-        TOFFOLI = self.module.TOFFOLI
+        toffoli_cls = self.module.TOFFOLI
         if (n >= 2 * m - 1) and (m >= 3):
-            gates1 = [TOFFOLI(controls[m - 2 - i],
-                              free[m - 4 - i],
-                              free[m - 3 - i]
-                              ).congruent(use_toffolis=use_toffolis)
+            gates1 = [toffoli_cls(controls[m - 2 - i],
+                                  free[m - 4 - i],
+                                  free[m - 3 - i]
+                                  ).congruent(use_toffolis=use_toffolis)
                       for i in range(m - 3)]
-            gates2 = TOFFOLI(controls[0], controls[1], free[0]
-                             ).congruent(use_toffolis=use_toffolis)
-            first_toffoli = TOFFOLI(controls[m - 1], free[m - 3], target)
+            gates2 = toffoli_cls(controls[0], controls[1], free[0]
+                                 ).congruent(use_toffolis=use_toffolis)
+            first_toffoli = toffoli_cls(controls[m - 1], free[m - 3], target)
 
             decomp_gates.append(first_toffoli)
             for gates in gates1:
@@ -546,8 +554,8 @@ class Collapse(Gate):
         """Returns the result list in proper order after sorting the qubits."""
         return self._result
 
+    @abstractmethod
     def _result_to_list(self, res): # pragma: no cover
-        # abstract method
         raise_error(NotImplementedError)
 
     @result.setter
@@ -569,7 +577,7 @@ class Collapse(Gate):
         if self._nqubits is not None:
             self._prepare()
 
-    def controlled_by(self, *q): # pragma: no cover
+    def controlled_by(self, *q): # pragma: no cover # pylint: disable=W0613
         """"""
         raise_error(NotImplementedError, "Collapse gates cannot be controlled.")
 
@@ -680,7 +688,7 @@ class M(Gate):
             self._set_unmeasured_qubits()
         return self._reduced_target_qubits
 
-    def controlled_by(self, *q):
+    def controlled_by(self, *q): # pylint: disable=W0613
         """"""
         raise_error(NotImplementedError, "Measurement gates cannot be controlled.")
 
@@ -991,7 +999,7 @@ class CNOT(Gate):
         self.target_qubits = (q1,)
         self.init_args = [q0, q1]
 
-    def decompose(self, *free, use_toffolis: bool = True) -> List[Gate]:
+    def decompose(self) -> List[Gate]:
         q0, q1 = self.control_qubits[0], self.target_qubits[0]
         return [self.__class__(q0, q1)]
 
@@ -1432,7 +1440,7 @@ class TOFFOLI(Gate):
             self._unitary = self.construct_unitary()
         return self._unitary
 
-    def decompose(self, *free, use_toffolis: bool = True) -> List[Gate]:
+    def decompose(self) -> List[Gate]:
         c0, c1 = self.control_qubits
         t = self.target_qubits[0]
         return [self.__class__(c0, c1, t)]
@@ -1457,16 +1465,15 @@ class TOFFOLI(Gate):
         if use_toffolis:
             return self.decompose()
 
-        import importlib
         import numpy as np
         control0, control1 = self.control_qubits
         target = self.target_qubits[0]
-        RY = self.module.RY
-        CNOT = self.module.CNOT
-        return [RY(target, -np.pi / 4), CNOT(control1, target),
-                RY(target, -np.pi / 4), CNOT(control0, target),
-                RY(target, np.pi / 4), CNOT(control1, target),
-                RY(target, np.pi / 4)]
+        ry = self.module.RY
+        cnot = self.module.CNOT
+        return [ry(target, -np.pi / 4), cnot(control1, target),
+                ry(target, -np.pi / 4), cnot(control0, target),
+                ry(target, np.pi / 4), cnot(control1, target),
+                ry(target, np.pi / 4)]
 
 
 class Unitary(ParametrizedGate):
@@ -1772,7 +1779,7 @@ class KrausChannel(Gate):
         raise_error(NotImplementedError, "Unitary property not implemented for "
                                          "channels.")
 
-    def controlled_by(self, *q):
+    def controlled_by(self, *q): # pylint: disable=W0613
         """"""
         raise_error(ValueError, "Noise channel cannot be controlled on qubits.")
 
@@ -1870,7 +1877,7 @@ class PauliNoiseChannel(UnitaryChannel):
 
 
 class ResetChannel(UnitaryChannel):
-    """Single-qubit reset channel.
+    r"""Single-qubit reset channel.
 
     Implements the following transformation:
 
@@ -1906,7 +1913,7 @@ class ResetChannel(UnitaryChannel):
 
 
 class ThermalRelaxationChannel:
-    """Single-qubit thermal relaxation error channel.
+    r"""Single-qubit thermal relaxation error channel.
 
     Implements the following transformation:
 
