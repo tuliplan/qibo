@@ -5,11 +5,10 @@ import tensorflow as tf
 import joblib
 from qibo.config import raise_error
 from qibo.base import gates
-from qibo import gates as gate_module
-from qibo.tensorflow import callbacks, circuit, measurements
+from qibo.tensorflow import circuit, measurements, cgates
 from qibo.tensorflow import distutils as utils
 from qibo.tensorflow import custom_operators as op
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 InitStateType = Union[np.ndarray, tf.Tensor, utils.DistributedState]
 OutputType = Union[utils.DistributedState, measurements.CircuitResult]
 
@@ -65,7 +64,7 @@ class TensorflowDistributedCircuit(circuit.TensorflowCircuit):
 
         self.memory_device = memory_device
         self.calc_devices = accelerators
-        self.queues = utils.DistributedQueues(self, gate_module)
+        self.queues = utils.DistributedQueues(self, cgates)
 
     def _set_nqubits(self, gate):
         # Do not set ``gate.nqubits`` during gate addition because this will
@@ -95,7 +94,7 @@ class TensorflowDistributedCircuit(circuit.TensorflowCircuit):
                                       "its first execution.")
         return super(TensorflowDistributedCircuit, self).fuse()
 
-    def with_noise(self, noise_map, measurement_noise=None):
+    def with_noise(self, noise_map):
         raise_error(NotImplementedError, "Distributed circuit does not support "
                                          "density matrices yet.")
 
@@ -104,7 +103,7 @@ class TensorflowDistributedCircuit(circuit.TensorflowCircuit):
 
         Also checks that there are sufficient qubits to use as global.
         """
-        if not isinstance(gate, gate_module.TensorflowGate):
+        if not isinstance(gate, cgates.TensorflowGate):
             raise_error(NotImplementedError, "Distributed circuit does not "
                                              "support native tensorflow gates.")
         if isinstance(gate, gates.VariationalLayer):
@@ -122,8 +121,9 @@ class TensorflowDistributedCircuit(circuit.TensorflowCircuit):
         """"""
         raise_error(RuntimeError, "Cannot compile circuit that uses custom operators.")
 
-    def _device_job(self, state: tf.Tensor, gates: List["TensorflowGate"]) -> tf.Tensor:
-        for gate in gates:
+    def _device_job(self, state: tf.Tensor, gatelist: List["TensorflowGate"]
+                    ) -> tf.Tensor:
+        for gate in gatelist:
             state = gate(state)
         return state
 
@@ -209,7 +209,7 @@ class TensorflowDistributedCircuit(circuit.TensorflowCircuit):
             self.measurement_gate.device = self.memory_device
 
         special_gates = iter(self.queues.special_queue)
-        for i, queues in enumerate(self.queues.queues):
+        for queues in self.queues.queues:
             if queues:  # standard gate
                 self._joblib_execute(state, queues)
             else: # special gate

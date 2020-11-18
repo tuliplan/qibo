@@ -6,7 +6,7 @@ from qibo.base import circuit
 from qibo.config import DTYPES, DEVICES, BACKEND, raise_error
 from qibo.tensorflow import measurements
 from qibo.tensorflow import custom_operators as op
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Union
 InitStateType = Union[np.ndarray, tf.Tensor]
 OutputType = Union[tf.Tensor, measurements.CircuitResult]
 

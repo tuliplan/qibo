@@ -678,7 +678,7 @@ class BaseCircuit(object):
         raise_error(NotImplementedError)
 
     @abstractmethod
-    def execute(self, *args): # pragma: no cover
+    def execute(self, initital_state, nshots): # pragma: no cover
         """Executes the circuit. Exact implementation depends on the backend.
 
         See :meth:`qibo.tensorflow.circuit.TensorflowCircuit.execute` for more
@@ -687,7 +687,7 @@ class BaseCircuit(object):
         # abstract method
         raise_error(NotImplementedError)
 
-    def __call__(self, *args): # pragma: no cover
+    def __call__(self, initital_state, nshots): # pragma: no cover
         """Equivalent to ``circuit.execute``."""
         # abstract method
         return self.execute(*args)
