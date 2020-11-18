@@ -301,7 +301,7 @@ class AdiabaticEvolution(StateEvolution):
         if self.opt_messages:
             self.opt_history["params"].append(params)
             self.opt_history["loss"].append(loss)
-            log.info(f"Params: {params}  -  <H1> = {loss}")
+            log.info(f"Params: {params}  -  <H1> = {loss}") # pylint: disable=W1203
         return loss
 
     def _nploss(self, params):

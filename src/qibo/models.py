@@ -41,7 +41,7 @@ class Circuit(DistributedCircuit):
         return circuit_cls(*args, **kwargs)
 
     @classmethod
-    def from_qasm(cls, qasm_code: str,
+    def from_qasm(cls, qasm_code: str, # pylint: disable=W0221
                   accelerators: Optional[Dict[str, int]] = None,
                   memory_device: str = "/CPU:0",
                   density_matrix: bool = False):
@@ -116,7 +116,6 @@ def _DistributedQFT(nqubits: int,
     circuit = Circuit(nqubits, accelerators, memory_device)
     icrit = nqubits // 2 + nqubits % 2
     if accelerators is not None:
-        circuit.global_qubits = range(circuit.nlocal, nqubits)
         if icrit < circuit.nglobal:
             raise_error(NotImplementedError, "Cannot implement QFT for {} qubits "
                                              "using {} global qubits."
@@ -168,7 +167,7 @@ class VQE(object):
         self.circuit = circuit
         self.hamiltonian = hamiltonian
 
-    def minimize(self, initial_state, method='Powell', options=None, compile=True):
+    def minimize(self, initial_state, method='Powell', options=None, compile=True): # pylint: disable=W0622
         """Search for parameters which minimizes the hamiltonian expectation.
 
         Args:
@@ -272,10 +271,9 @@ class QAOA(object):
             self.mixer = self.hamiltonians.X(self.nqubits, trotter=trotter)
         else:
             if type(mixer) != type(hamiltonian):
-                  raise_error(TypeError, "Given Hamiltonian is of type {} "
-                                         "while mixer is of type {}."
-                                         "".format(type(hamiltonian),
-                                                   type(mixer)))
+                raise_error(TypeError, "Given Hamiltonian is of type {} while "
+                                       "mixer is of type {}.".format(
+                                            type(hamiltonian), type(mixer)))
             self.mixer = mixer
 
         # create circuits for Trotter Hamiltonians

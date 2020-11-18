@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @authors: S. Carrazza and A. Garcia
 import collections
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 from qibo.base import gates
 from qibo import gates as gate_module
 from qibo.config import raise_error
@@ -677,8 +677,7 @@ class BaseCircuit(object):
         # abstract method
         raise_error(NotImplementedError)
 
-    @abstractmethod
-    def execute(self, initital_state, nshots): # pragma: no cover
+    def execute(self, initial_state=None, nshots=None): # pragma: no cover
         """Executes the circuit. Exact implementation depends on the backend.
 
         See :meth:`qibo.tensorflow.circuit.TensorflowCircuit.execute` for more
@@ -687,7 +686,7 @@ class BaseCircuit(object):
         # abstract method
         raise_error(NotImplementedError)
 
-    def __call__(self, initital_state, nshots): # pragma: no cover
+    def __call__(self, initial_state=None, nshots=None): # pragma: no cover
         """Equivalent to ``circuit.execute``."""
         # abstract method
         return self.execute(*args)

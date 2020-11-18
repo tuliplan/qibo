@@ -5,7 +5,7 @@ import tensorflow as tf
 from qibo.base import gates as base_gates
 from qibo.config import BACKEND, DTYPES, DEVICES, NUMERIC_TYPES, raise_error
 from qibo.tensorflow import custom_operators as op
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import List, Optional, Sequence, Tuple
 
 
 class TensorflowGate(base_gates.Gate):
@@ -112,8 +112,8 @@ class MatrixGate(TensorflowGate):
                                       dtype=DTYPES.get('DTYPECPX'))
 
     def _state_vector_call(self, state: tf.Tensor) -> tf.Tensor:
-       return self.gate_op(state, self.matrix, self.qubits_tensor,
-                           self.nqubits, *self.target_qubits)
+        return self.gate_op(state, self.matrix, self.qubits_tensor,
+                            self.nqubits, *self.target_qubits)
 
     def _density_matrix_call(self, state: tf.Tensor) -> tf.Tensor:
         state = self.gate_op(state, self.matrix, self.qubits_tensor_dm,
@@ -386,12 +386,12 @@ class U3(MatrixGate, base_gates.U3):
 
 class ZPow(MatrixGate, base_gates.ZPow):
 
-  def __new__(cls, q, theta):
-      if BACKEND.get('GATES') == 'custom':
-          return U1(q, theta)
-      else:
-          from qibo.tensorflow import gates
-          return gates.U1(q, theta)
+    def __new__(cls, q, theta):
+        if BACKEND.get('GATES') == 'custom':
+            return U1(q, theta)
+        else:
+            from qibo.tensorflow import gates
+            return gates.U1(q, theta)
 
 
 class CNOT(TensorflowGate, base_gates.CNOT):
@@ -486,12 +486,12 @@ class CU3(_CUn_, base_gates.CU3):
 
 class CZPow(MatrixGate, base_gates.CZPow):
 
-  def __new__(cls, q0, q1, theta):
-      if BACKEND.get('GATES') == 'custom':
-          return CU1(q0, q1, theta)
-      else:
-          from qibo.tensorflow import gates
-          return gates.CU1(q0, q1, theta)
+    def __new__(cls, q0, q1, theta):
+        if BACKEND.get('GATES') == 'custom':
+            return CU1(q0, q1, theta)
+        else:
+            from qibo.tensorflow import gates
+            return gates.CU1(q0, q1, theta)
 
 
 class SWAP(TensorflowGate, base_gates.SWAP):
