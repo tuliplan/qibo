@@ -8,7 +8,7 @@ from qibo.tensorflow import custom_operators as op
 from typing import List, Optional, Sequence, Tuple
 
 
-class TensorflowGate(base_gates.Gate):
+class TensorflowGate:
 
     import sys
     module = sys.modules[__name__]
@@ -63,15 +63,6 @@ class TensorflowGate(base_gates.Gate):
                 self.target_qubits_dm = tuple(np.array(self.target_qubits) +
                                               self.nqubits)
                 self.qubits_tensor_dm = self.qubits_tensor + self.nqubits
-
-    def _prepare(self):
-        """Prepares the gate for application to state vectors.
-
-        Called automatically by the ``nqubits`` setter.
-        Calculates the ``matrix`` required to apply the gate to state vectors.
-        This is not necessarily the same as the unitary matrix of the gate.
-        """
-        pass
 
     def _set_nqubits(self, state: tf.Tensor):
         """Sets ``gate.nqubits`` from state, if not already set."""
@@ -219,9 +210,8 @@ class Collapse(TensorflowGate, base_gates.Collapse):
         return state / tf.linalg.trace(state)
 
 
-class M(TensorflowGate, base_gates.M):
-    from qibo.tensorflow import distutils
-    from qibo.tensorflow import measurements
+class M(base_gates.M):
+    from qibo.tensorflow import distutils, measurements
 
     def __init__(self, *q, register_name: Optional[str] = None,
                  p0: Optional["ProbsType"] = None,

@@ -103,7 +103,7 @@ class TensorflowDistributedCircuit(circuit.TensorflowCircuit):
 
         Also checks that there are sufficient qubits to use as global.
         """
-        if not isinstance(gate, cgates.TensorflowGate):
+        if not isinstance(gate, (cgates.TensorflowGate, cgates.M)):
             raise_error(NotImplementedError, "Distributed circuit does not "
                                              "support native tensorflow gates.")
         if isinstance(gate, gates.VariationalLayer):
