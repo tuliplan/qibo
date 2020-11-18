@@ -5,7 +5,7 @@ if BACKEND_NAME != "tensorflow": # pragma: no cover
 from qibo.tensorflow.circuit import TensorflowCircuit as StateCircuit
 from qibo.tensorflow.circuit import TensorflowDensityMatrixCircuit as DensityMatrixCircuit
 from qibo.tensorflow.distcircuit import TensorflowDistributedCircuit as DistributedCircuit
-from qibo.evolution import StateEvolution, AdiabaticEvolution
+from qibo.evolution import StateEvolution, AdiabaticEvolution # pylint: disable=W0611
 from typing import Dict, Optional
 
 
@@ -45,12 +45,11 @@ class Circuit(DistributedCircuit):
                   accelerators: Optional[Dict[str, int]] = None,
                   memory_device: str = "/CPU:0",
                   density_matrix: bool = False):
-      circuit_cls, args, kwargs = cls._constructor(
-                qasm_code, accelerators=accelerators,
-                memory_device=memory_device,
-                density_matrix=density_matrix
-              )
-      return circuit_cls.from_qasm(*args, **kwargs)
+        circuit_cls, args, kwargs = cls._constructor(
+            qasm_code, accelerators=accelerators,
+            memory_device=memory_device,
+            density_matrix=density_matrix)
+        return circuit_cls.from_qasm(*args, **kwargs)
 
 
 def QFT(nqubits: int, with_swaps: bool = True,
@@ -256,7 +255,7 @@ class QAOA(object):
     from qibo.config import K, DTYPES
     from qibo.base.hamiltonians import HAMILTONIAN_TYPES
 
-    def __init__(self, hamiltonian, mixer=None, solver="exp", callbacks=[],
+    def __init__(self, hamiltonian, mixer=None, solver="exp", callbacks=None,
                  accelerators=None, memory_device="/CPU:0"):
         # list of QAOA variational parameters (angles)
         self.params = None
@@ -295,7 +294,10 @@ class QAOA(object):
         self.ham_solver = solvers.factory[solver](1e-2, self.hamiltonian)
         self.mix_solver = solvers.factory[solver](1e-2, self.mixer)
 
-        self.callbacks = callbacks
+        if callbacks is None:
+            self.callbacks = []
+        else:
+            self.callbacks = callbacks
         self.accelerators = accelerators
         self.normalize_state = StateEvolution._create_normalize_state(
             self, solver)
@@ -390,7 +392,6 @@ class QAOA(object):
             loss = lambda p: _loss(tf.cast(
                 p, dtype=self.DTYPES.get('DTYPECPX')))
         else:
-            import numpy as np
             loss = lambda p: _loss(p).numpy()
 
         result, parameters = self.optimizers.optimize(loss, initial_p, method,

@@ -40,7 +40,7 @@ class StateEvolution:
             final_state2 = evolve(T=2, initial_state)
     """
 
-    def __init__(self, hamiltonian, dt, solver="exp", callbacks=[],
+    def __init__(self, hamiltonian, dt, solver="exp", callbacks=None,
                  accelerators=None, memory_device="/CPU:0"):
         if isinstance(hamiltonian, hamiltonians.HAMILTONIAN_TYPES):
             ham = hamiltonian
@@ -64,7 +64,10 @@ class StateEvolution:
             ham.circuit(dt, accelerators, memory_device)
         self.solver = solvers.factory[solver](self.dt, hamiltonian)
 
-        self.callbacks = callbacks
+        if callbacks is None:
+            self.callbacks = []
+        else:
+            self.callbacks = callbacks
         self.accelerators = accelerators
         self.normalize_state = self._create_normalize_state(solver)
         self.calculate_callbacks = self._create_calculate_callbacks(
@@ -164,7 +167,7 @@ class AdiabaticEvolution(StateEvolution):
     """
     ATOL = 1e-7 # Tolerance for checking s(0) = 0 and s(T) = 1.
 
-    def __init__(self, h0, h1, s, dt, solver="exp", callbacks=[],
+    def __init__(self, h0, h1, s, dt, solver="exp", callbacks=None,
                  accelerators=None, memory_device="/CPU:0"):
         if not issubclass(type(h0), hamiltonians.HAMILTONIAN_TYPES):
             raise_error(TypeError, "h0 should be a hamiltonians.Hamiltonian "
@@ -203,8 +206,8 @@ class AdiabaticEvolution(StateEvolution):
         elif nparams == 2: # given ``s`` has undefined parameters
             self._param_schedule = s
         else:
-            raise_error(ValueError, f"Scheduling function shoud take one or two "
-                                     "arguments but it takes {nparams}.")
+            raise_error(ValueError, "Scheduling function shoud take one or two "
+                                    "arguments but it takes {}.".format(nparams))
 
     @property
     def schedule(self):
@@ -326,7 +329,6 @@ class AdiabaticEvolution(StateEvolution):
             messages (bool): If ``True`` the loss evolution is shown during
                 optimization.
         """
-        import numpy as np
         self.opt_messages = messages
         if method == "sgd":
             loss = self._loss

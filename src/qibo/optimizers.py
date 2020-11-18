@@ -1,5 +1,5 @@
 def optimize(loss, initial_parameters, method='Powell',
-             options=None, compile=False):
+             options=None, compile=False): # pylint: disable=W0622
     """Main optimization method. Selects one of the following optimizers:
         - :meth:`qibo.optimizers.cma`
         - :meth:`qibo.optimizers.newtonian`
@@ -37,8 +37,8 @@ def cma(loss, initial_parameters, options=None):
             optimizer. The user can use ``cma.CMAOptions()`` to view the
             available options.
     """
-    import cma
-    r = cma.fmin2(loss, initial_parameters, 1.7, options=options)
+    import cma as cma_opt
+    r = cma_opt.fmin2(loss, initial_parameters, 1.7, options=options)
     return r[1].result.fbest, r[1].result.xbest
 
 
@@ -61,7 +61,7 @@ def newtonian(loss, initial_parameters, method='Powell', options=None):
     return m.fun, m.x
 
 
-def sgd(loss, initial_parameters, options=None, compile=False):
+def sgd(loss, initial_parameters, options=None, compile=False): # pylint: disable=W0622
     """Stochastic Gradient Descent (SGD) optimizer using Tensorflow backpropagation.
 
     See `tf.keras.Optimizers <https://www.tensorflow.org/api_docs/python/tf/keras/optimizers>`_
