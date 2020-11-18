@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 # @authors: S. Carrazza and A. Garcia
+import sys
+import numpy as np
 from abc import ABC, abstractmethod
 from qibo import config
 from qibo.config import raise_error
@@ -25,8 +27,6 @@ class Gate(ABC):
         name: Name of the gate.
         target_qubits: Tuple with ids of target qubits.
     """
-
-    import sys
     module = sys.modules[__name__]
 
     def __init__(self):
@@ -210,8 +210,7 @@ class Gate(ABC):
                 return gates.I(*self.qubits)
         return None
 
-    def __rmatmul__(self, other: "TensorflowGate") -> "TensorflowGate": # pragma: no cover
-        # abstract method
+    def __rmatmul__(self, other: "TensorflowGate") -> "TensorflowGate":
         return self.__matmul__(other)
 
     def on_qubits(self, *q) -> "Gate":
@@ -896,7 +895,6 @@ class U2(_Un_):
 
     def _dagger(self) -> "Gate":
         """"""
-        import numpy as np
         phi = np.pi - self._lam
         lam = - np.pi - self._phi
         return self.__class__(self.target_qubits[0], phi, lam)
@@ -1204,7 +1202,6 @@ class CU2(_CUn_):
 
     def _dagger(self) -> "Gate":
         """"""
-        import numpy as np
         q0 = self.control_qubits[0]
         q1 = self.target_qubits[0]
         phi = np.pi - self._lam
@@ -1398,9 +1395,9 @@ class GeneralizedfSim(ParametrizedGate):
         self.init_args = [q0, q1]
         self.init_kwargs = {"unitary": unitary, "phi": phi}
 
+    @abstractmethod
     def _dagger(self) -> "Gate": # pragma: no cover
         """"""
-        # abstract method
         raise_error(NotImplementedError)
 
     @property
@@ -1464,8 +1461,6 @@ class TOFFOLI(Gate):
         """
         if use_toffolis:
             return self.decompose()
-
-        import numpy as np
         control0, control1 = self.control_qubits
         target = self.target_qubits[0]
         ry = self.module.RY
@@ -1508,9 +1503,9 @@ class Unitary(ParametrizedGate):
         args.extend(q)
         return self.__class__(*args, **self.init_kwargs)
 
+    @abstractmethod
     def _dagger(self) -> "Gate": # pragma: no cover
         """"""
-        # abstract method
         raise_error(NotImplementedError)
 
     @property
@@ -1621,8 +1616,8 @@ class VariationalLayer(ParametrizedGate):
                                     "".format(len(self.target_qubits), len(params)))
         return {q: p for q, p in zip(self.target_qubits, params)}
 
+    @abstractmethod
     def _calculate_unitaries(self): # pragma: no cover
-        # abstract method
         return raise_error(NotImplementedError)
 
     def _dagger(self) -> "Gate":
@@ -1971,7 +1966,6 @@ class ThermalRelaxationChannel:
 
     @staticmethod
     def _calculate_probs(t1, t2, time, excited_population):
-        import numpy as np
         if excited_population < 0 or excited_population > 1:
             raise_error(ValueError, "Invalid excited state population {}."
                                     "".format(excited_population))

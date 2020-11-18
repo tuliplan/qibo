@@ -665,13 +665,13 @@ class BaseCircuit(ABC):
         return "\n".join(logs)
 
     @property
+    @abstractmethod
     def final_state(self): # pragma: no cover
         """Returns the final state after full simulation of the circuit.
 
         If the circuit is executed more than once, only the last final state
         is returned.
         """
-        # abstract method
         raise_error(NotImplementedError)
 
     @abstractmethod
@@ -681,7 +681,6 @@ class BaseCircuit(ABC):
         See :meth:`qibo.tensorflow.circuit.TensorflowCircuit.execute` for more
         details.
         """
-        # abstract method
         raise_error(NotImplementedError)
 
     def __call__(self, initial_state=None, nshots=None):
