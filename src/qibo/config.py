@@ -99,6 +99,9 @@ if BACKEND_NAME == "tensorflow":
                 for the gates that use tensorflow primitives (``tf.einsum`` or
                 ``tf.matmul`` respectively).
         """
+        # FIXME: Remove this
+        return
+
         if not ALLOW_SWITCHERS and backend != BACKEND['GATES']:
             warnings.warn("Backend should not be changed after allocating gates.",
                           category=RuntimeWarning)

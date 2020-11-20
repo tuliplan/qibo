@@ -41,8 +41,8 @@ class TensorflowCircuit(circuit.BaseCircuit):
 
     def _set_nqubits(self, gate):
         if gate._nqubits is None:
-            with tf.device(DEVICES['DEFAULT']):
-                gate.nqubits = self.nqubits
+            gate.nqubits = self.nqubits
+            gate.prepare()
         elif gate.nqubits != self.nqubits:
             super(TensorflowCircuit, self)._set_nqubits(gate)
 
